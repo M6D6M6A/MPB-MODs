@@ -55,8 +55,9 @@ function setMaxShinyRate(battleScene) {
     }
 }
 
-function makeEnemiesShiny() {
-    let enemyParty = getBattleScene().currentBattle.enemyParty;
+function makeEnemiesShiny(phase) {
+    let battleScene = phase.battleScene || getBattleScene();
+    let enemyParty = battleScene.currentBattle.enemyParty;
     enemyParty.forEach((v, i, a) => {
         data = a[i];
         data.shiny = true;
@@ -83,7 +84,7 @@ const shinyHook = (phase) => {
 
         // Define the new function
         phase.doEncounter = () => {
-            makeEnemiesShiny()
+            makeEnemiesShiny(phase)
             oldDoEncounter.call(phase); // Call the original function within the context of phase
         };
     }
@@ -92,13 +93,15 @@ const shinyHook = (phase) => {
 
 const titleHook = (phase) => {
     // cleanup items in title screen becouse of shiny mod
-    let battleScene = getBattleScene();
+    let battleScene = phase.battleScene || getBattleScene();
     battleScene.modifiers = [];
     battleScene.updateModifiers(true, true);
 };
 
 const NextEncounterHook = (phase) => {
-    makeEnemiesShiny()
+    if (data.getData('WildShiny100p', false, true)) {
+        makeEnemiesShiny(phase)
+    }
 };
 
 hook('EncounterPhase', shinyHook); // Buggy because of starter select!
