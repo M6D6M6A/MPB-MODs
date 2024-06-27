@@ -1,5 +1,6 @@
 {
     "name": "MPB Utils",
     "description": "My script collection.",
-    "author": "mpb.rip"
+    "author": "mpb.rip",
+    "version" : "1.1"
 }
