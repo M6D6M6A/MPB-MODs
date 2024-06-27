@@ -2,7 +2,6 @@ addWindow(
     'MPB Utils',
     () => {
         ImGui.Checkbox('100% Wild shiny', data.getAccess('WildShiny100p', false, true));
-        // ImGui.Checkbox('100% All shiny', data.getAccess('AllShiny100p', false, true));
     },
     {
         persistentOpen: true,
@@ -10,19 +9,6 @@ addWindow(
 );
 
 function setMaxShinyRate(battleScene) {
-    // Credit: Mike
-    let oldAddEnemyPokemon = battleScene.addEnemyPokemon;
-
-    battleScene.addEnemyPokemon = (species: PokeRogue.data.PokemonSpecies, level: number, trainerSlot: PokeRogue.data.TrainerSlot, boss: boolean = false, dataSource?: PokeRogue.system.PokemonData, postProcess?: (enemyPokemon: PokeRogue.field.EnemyPokemon) => void): PokeRogue.field.EnemyPokemon => {
-        const pokemon: PokeRogue.field.EnemyPokemon = oldAddEnemyPokemon.call(battleScene, species, level, trainerSlot, boss, dataSource, postProcess);
-        log(pokemon);
-        if (battleScene && data.getData('WildShiny100p', false, true)) {
-            pokemon.shiny = true;
-            //pokemon.variant = something for shiny variants
-        }
-        return pokemon;
-    };
-
     const modifiers = battleScene.modifiers;
     const searchString = 'modifierType:ModifierType.SHINY_CHARM';
     const maxStackCount = 20;
@@ -62,8 +48,7 @@ function makeEnemiesShiny(phase) {
         data = a[i];
         data.shiny = true;
         data.variant = Math.floor(Math.random() * 3);
-        // data.changeForm(Math.floor(Math.random() * data.species.forms.length));
-        data.changeForm(data.species.forms.length === 0 ? 0 : Math.floor(Math.random() * (data.species.forms.length)));
+        data.changeForm(Math.floor(Math.random() * data.species.forms.length));
         log(data);
 
         a[i] = data;
@@ -73,11 +58,6 @@ function makeEnemiesShiny(phase) {
 const shinyHook = (phase) => {
     let battleScene = phase.battleScene || getBattleScene();
 
-    // if (battleScene && battleScene.currentPhase && battleScene.currentPhase.loaded && battleScene.currentPhase.loaded === true) {
-    //     if (data.getData('WildShiny100p', false, true)) {
-    //         setMaxShinyRate(battleScene);
-    //     }
-    // } else {
     if (battleScene && data.getData('WildShiny100p', false, true)) {
         setMaxShinyRate(battleScene);
         const oldDoEncounter = phase.doEncounter; // Save the original function
@@ -88,7 +68,6 @@ const shinyHook = (phase) => {
             oldDoEncounter.call(phase); // Call the original function within the context of phase
         };
     }
-    // }
 };
 
 const titleHook = (phase) => {
@@ -104,6 +83,6 @@ const NextEncounterHook = (phase) => {
     }
 };
 
-hook('EncounterPhase', shinyHook); // Buggy because of starter select!
-hook('TitlePhase', titleHook); // Buggy because of starter select!
-hook('NextEncounterPhase', NextEncounterHook); // Buggy because of starter select!
+hook('EncounterPhase', shinyHook);
+hook('TitlePhase', titleHook);
+hook('NextEncounterPhase', NextEncounterHook);
