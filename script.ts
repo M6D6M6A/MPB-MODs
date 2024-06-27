@@ -10,6 +10,19 @@ addWindow(
 );
 
 function setMaxShinyRate(battleScene) {
+    // Credit: Mike
+    let oldAddEnemyPokemon = battleScene.addEnemyPokemon;
+
+    battleScene.addEnemyPokemon = (species: PokeRogue.data.PokemonSpecies, level: number, trainerSlot: PokeRogue.data.TrainerSlot, boss: boolean = false, dataSource?: PokeRogue.system.PokemonData, postProcess?: (enemyPokemon: PokeRogue.field.EnemyPokemon) => void): PokeRogue.field.EnemyPokemon => {
+        const pokemon: PokeRogue.field.EnemyPokemon = oldAddEnemyPokemon.call(battleScene, species, level, trainerSlot, boss, dataSource, postProcess);
+        log(pokemon);
+        if (battleScene && data.getData('WildShiny100p', false, true)) {
+            pokemon.shiny = true;
+            //pokemon.variant = something for shiny variants
+        }
+        return pokemon;
+    };
+
     const modifiers = battleScene.modifiers;
     const searchString = 'modifierType:ModifierType.SHINY_CHARM';
     const maxStackCount = 20;
@@ -42,11 +55,52 @@ function setMaxShinyRate(battleScene) {
     }
 }
 
+function makeEnemiesShiny() {
+    let enemyParty = getBattleScene().currentBattle.enemyParty;
+    enemyParty.forEach((v, i, a) => {
+        data = a[i];
+        data.shiny = true;
+        data.variant = Math.floor(Math.random() * 3);
+        // data.changeForm(Math.floor(Math.random() * data.species.forms.length));
+        data.changeForm(data.species.forms.length === 0 ? 0 : Math.floor(Math.random() * (data.species.forms.length)));
+        log(data);
+
+        a[i] = data;
+    });
+}
+
 const shinyHook = (phase) => {
-    const battleScene = phase.battleScene || getBattleScene();
-    if (data.getData('WildShiny100p', false, true)) {
+    let battleScene = phase.battleScene || getBattleScene();
+
+    // if (battleScene && battleScene.currentPhase && battleScene.currentPhase.loaded && battleScene.currentPhase.loaded === true) {
+    //     if (data.getData('WildShiny100p', false, true)) {
+    //         setMaxShinyRate(battleScene);
+    //     }
+    // } else {
+    if (battleScene && data.getData('WildShiny100p', false, true)) {
         setMaxShinyRate(battleScene);
+        const oldDoEncounter = phase.doEncounter; // Save the original function
+
+        // Define the new function
+        phase.doEncounter = () => {
+            makeEnemiesShiny()
+            oldDoEncounter.call(phase); // Call the original function within the context of phase
+        };
     }
+    // }
 };
 
-hook('EncounterPhase', shinyHook);
+const titleHook = (phase) => {
+    // cleanup items in title screen becouse of shiny mod
+    let battleScene = getBattleScene();
+    battleScene.modifiers = [];
+    battleScene.updateModifiers(true, true);
+};
+
+const NextEncounterHook = (phase) => {
+    makeEnemiesShiny()
+};
+
+hook('EncounterPhase', shinyHook); // Buggy because of starter select!
+hook('TitlePhase', titleHook); // Buggy because of starter select!
+hook('NextEncounterPhase', NextEncounterHook); // Buggy because of starter select!
