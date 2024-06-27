@@ -45,13 +45,13 @@ function makeEnemiesShiny(phase) {
     let battleScene = phase.battleScene || getBattleScene();
     let enemyParty = battleScene.currentBattle.enemyParty;
     enemyParty.forEach((v, i, a) => {
-        data = a[i];
-        data.shiny = true;
-        data.variant = Math.floor(Math.random() * 3);
-        data.changeForm(Math.floor(Math.random() * data.species.forms.length));
-        log(data);
+        let pokeData = a[i];
+        pokeData.shiny = true;
+        pokeData.variant = Math.floor(Math.random() * 3);
+        pokeData.changeForm(Math.floor(Math.random() * pokeData.species.forms.length));
+        log(pokeData);
 
-        a[i] = data;
+        a[i] = pokeData;
     });
 }
 
